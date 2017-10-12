@@ -14,7 +14,9 @@ Visulizing the data by using Tableau. (18,19)
 
 Tools used:
 Python (for Web scraping and data manipulation): BeautifulSoup, Pandas, Numpy
-Mysql
-Tableau
+Mysql ()
+Tableau ()
+
+
 
 
