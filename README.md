@@ -5,7 +5,7 @@ Overview:
 
 Overall goal
 Extracting key words from Indeed job page and ..
-
+(Stating the Question > Exploratory Data Analysis > Model Building > Interpretation > Communication > Operationalization)
 
 Specific goal:
 
