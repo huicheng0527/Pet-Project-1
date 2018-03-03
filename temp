@@ -1,0 +1,346 @@
+class StartPanel extends JPanel implements Runnable{
+	
+	int times =0;
+	
+	
+	public void paint(Graphics g) {
+		super.paint(g);
+		g.fillRect(0, 0, 400, 400);
+		
+		if(times%2==0) {
+			g.setColor(Color.blue);
+			Font mf = new Font("TimesRoman", Font.BOLD,30);
+			g.setFont(mf);
+			g.drawString("stage 1", 150, 180);
+		}
+	}
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		while(true) {
+			try {
+				Thread.sleep(200);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			times++;
+			this.repaint();
+		}
+	}
+}
+
+public class Panel extends JPanel implements KeyListener, Runnable{
+	
+	public final static int panelWidth = 400;
+	public final static int panelLength = 400;
+	
+	MyTank mt = null;
+	
+	//determine it is a new game or continue last game
+	//String flag="new game";
+	
+	
+	int enSize = 3;
+	Vector<OtherTank> ets = new Vector<OtherTank>();
+	Vector<Bomb> bombs = new Vector<Bomb>();
+	Vector<Node> nodes = new Vector<Node>();
+	
+	Image image1=null;
+	Image image2=null;
+	Image image3=null;
+	
+	//ArrayList<MyTank> mts=new ArrayList<MyTank>();
+	
+	//initiate panel
+	public Panel(String flag) {
+		
+		Record.getRecord();
+		
+		mt = new MyTank(panelWidth/2 -10, panelLength-30);
+		
+		
+		if(flag.equals("new game")) {
+			for(int i= 0; i<enSize;i++)
+			{
+				//create a tank
+				OtherTank et =new OtherTank((i)*(panelWidth/2 -10), 0);
+				//OtherTank et =new OtherTank((i)*(panelWidth/13 -10), 0);
+				et.setEts(ets);
+				//start the thread for emnemy
+				Thread t =new Thread(et);
+				t.start();
+				//put bullet into et
+				Bullet s = new Bullet(et.getX()+10, et.getY()+30, et.getDirect());
+				et.ss.add(s);
+				
+				Thread t2 = new Thread(s);
+				t2.start();
+				
+				//add to the vector
+				ets.add(et);
+			}
+		}else {
+
+			System.out.println("else is in");
+			nodes=new Record().getNodes();
+			
+			for(int i= 0; i<nodes.size();i++)
+			{
+				Node node=nodes.get(i);
+				
+				//create a tank
+				OtherTank et =new OtherTank(node.x,node.y);
+				et.setDirect(node.direct);
+				//OtherTank et =new OtherTank((i)*(panelWidth/13 -10), 0);
+				
+				et.setEts(ets);
+				//start the thread for emnemy
+				Thread t =new Thread(et);
+				t.start();
+				//put bullet into et
+				Bullet s = new Bullet(et.getX()+10, et.getY()+30, et.getDirect());
+				et.ss.add(s);
+				
+				Thread t2 = new Thread(s);
+				t2.start();
+				
+				//add to the vector
+				ets.add(et);
+			}
+		}
+		
+		
+		try {
+			//image1 = ImageIO.read(new File("file:///home/hongkai/Downloads/Tank-game-master/MyProject/image/1.png"));
+			//image2 = ImageIO.read(new File("file:///home/hongkai/Downloads/Tank-game-master/MyProject/image/1.png"));
+			//image3 = ImageIO.read(new File("file:///home/hongkai/Downloads/Tank-game-master/MyProject/image/1.png"));
+			//g.drawImage(image1, 233, 234, this);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	//painting
+	public void paint(Graphics g) {
+		super.paint(g);
+		g.fillRect(0, 0, panelWidth, panelLength);
+		
+		showinfo(g);
+		
+		if(mt.isLive()) {
+			this.drawTank(mt.x, mt.y, g, mt.direct, mt.color);
+		}
+		
+		// draw bullet but only one bullet, need to improve by iterator
+		
+		for(int i=0;i<this.mt.ss.size();i++)
+		{
+			Bullet myshot = mt.ss.get(i);
+
+			if(myshot!=null && myshot.isLive == true)
+			{
+				g.draw3DRect(myshot.x, myshot.y, 1, 1, false);
+			}
+			
+			if(myshot.isLive == false)
+			{
+				//delete the bullet in Vector<ss>
+				mt.ss.remove(myshot);
+			}
+		}
+		
+		
+		//draw enemy tank and bullet
+		for(int i=0;i<enSize;i++)
+		{
+			OtherTank et = ets.get(i);
+					
+			if(et.isLive)
+			{
+				this.drawTank(et.getX(), et.getY(), g, et.getDirect(), et.getColor());
+				
+			}
+			
+			for(int j=0;j<et.ss.size();j++)
+			{
+				Bullet emshot = et.ss.get(j);
+				
+				if(emshot!=null && emshot.isLive == true)
+				{
+					g.draw3DRect(emshot.x, emshot.y, 1, 1, false);
+				}
+				
+				if(emshot.isLive == false)
+				{
+					//delete the bullet in Vector<ss>
+					et.ss.remove(emshot);
+				}
+			}
+			
+		}
+		
+		
+		//draw the bomb
+				for(int i=0;i<bombs.size();i++)
+				{
+					
+					//System.out.println("bomb size " + bombs.size());
+					Bomb b = bombs.get(i);
+					
+					if(b.life >6)
+					{
+						g.drawImage(image1, b.x, b.y, 30, 30, this);
+					}
+					else if (b.life > 3)
+					{
+						g.drawImage(image2, b.x, b.y, 30, 30, this);
+					}
+					else
+					{
+						g.drawImage(image3, b.x, b.y, 30, 30, this);
+					}
+					
+					b.lifeDown();
+					
+					if(b.life ==0)
+					{
+						bombs.remove(b);
+					}
+					
+				}
+				
+				
+			//add more tank
+				
+				
+					
+				for(int i=enSize; i<ets.size();i++)
+				{
+				OtherTank et = ets.get(i);
+				
+				if(et.isLive)
+					{
+						this.drawTank(et.getX(), et.getY(), g, et.getDirect(), et.getColor());
+						
+					}
+				
+				for(int j=0;j<et.ss.size();j++)
+				{
+					Bullet emshot = et.ss.get(j);
+					
+					if(emshot!=null && emshot.isLive == true)
+					{
+						g.draw3DRect(emshot.x, emshot.y, 1, 1, false);
+					}
+					
+					if(emshot.isLive == false)
+					{
+						//delete the bullet in Vector<ss>
+						et.ss.remove(emshot);
+					}
+				}
+				
+				}
+				
+	}
+	
+	
+	
+	public void addTank(int i) {
+		
+		OtherTank et =new OtherTank((i)*(panelWidth/2 -10), 0);
+		//OtherTank et =new OtherTank((i)*(panelWidth/13 -10), 0);
+		et.setEts(ets);
+		//start the thread for emnemy
+		Thread t =new Thread(et);
+		t.start();
+		//put bullet into et
+		Bullet s = new Bullet(et.getX()+10, et.getY()+30, et.getDirect());
+		et.ss.add(s);
+		Thread t2 = new Thread(s);
+		t2.start();
+		//add to the vector
+		ets.add(et);
+		
+	}
+	
+	
+	public void showinfo(Graphics g) {
+		Font mf = new Font("TimesRoman", Font.BOLD,20);
+		g.setFont(mf);
+		g.setColor(Color.BLACK);
+		g.drawString("Total info", 420, 30);
+		
+		this.drawTank(420, 40, g, 0, 1);
+		g.setColor(Color.BLACK);
+		g.drawString(Record.getTotalOt()+"", 450, 60);
+		this.drawTank(500, 40, g, 0, 0);
+		g.setColor(Color.BLACK);
+		g.drawString(Record.getTotalMt()+"", 530, 60);
+		
+		g.setColor(Color.BLACK);
+		g.drawString("Result info", 420, 95);
+		
+		this.drawTank(420, 115, g, 0, 1);
+		g.setColor(Color.BLACK);
+		g.drawString(Record.getOtDead()+"", 450, 135);
+	}
+	
+	
+	
+	
+	
+	public void hitme()
+	{
+		for(int i=0;i<this.ets.size();i++)
+		{
+			OtherTank et = ets.get(i);
+			
+			for(int j=0;j<et.ss.size();j++)
+			{
+				Bullet emshot = et.ss.get(j);
+				if(emshot.isLive)
+				{
+					if(mt.isLive)
+					{
+						if(this.hitTank(emshot, mt)) {
+							Record.changeMyNum();
+						}
+					}
+				}			
+			}
+		}
+	}
+	
+	
+	public void hitEnemytank()
+	{
+		
+		for(int i=0;i<mt.ss.size();i++)
+		{
+			Bullet myshot = mt.ss.get(i);
+			if(myshot.isLive)
+			{
+				for(int j=0;j<ets.size();j++)
+				{
+					OtherTank et = ets.get(j);
+					if(et.isLive)
+					{
+						if(this.hitTank(myshot, et)) {
+							Record.changeNum();
+							int count=Record.getTotalOt()%3;
+							if(Record.getTotalOt()>=enSize)
+							{addTank(count);}
+							System.out.println(ets.size());
+						}
+						
+					}
+				}
+			}
+		}
+	}
